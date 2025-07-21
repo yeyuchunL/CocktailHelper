@@ -1,7 +1,7 @@
-import { Cocktail, CocktailData } from '../model/CocktailModel';
 import hilog from '@ohos.hilog';
 import axios, { AxiosError, AxiosResponse } from '@ohos/axios';
-import { font } from '@kit.ArkUI';
+import { font, PromptAction } from '@kit.ArkUI';
+import { Cocktail } from '../model/CocktailModel';
 
 @Entry
 @Component
@@ -14,31 +14,33 @@ struct Index {
     })
   }
 
+  @State pageNum: number = 1;
   @State inputValue: string = ''
-  pathStack: NavPathStack = new NavPathStack();
-  cocktail: Cocktail = new Cocktail({
-    idDrink: '11007',
-    strDrink: '玛格丽塔',
-    strDrinkThumb: 'https://www.thecocktaildb.com/images/media/drink/5noda61589575158.jpg',
-    strGlass: 'Cocktail glass',
-    strInstructions: '摇匀后倒入冰镇的鸡尾酒杯。',
-    strIngredients: ['龙舌兰', '君度橙酒', '青柠汁', '盐'],
-    strMeasures: ['45ml', '15ml', '30ml', ''],
-  });
+  pathStack: NavPathStack = new NavPathStack()
+  cocktail: Cocktail = new Cocktail();
+  private uiContext: UIContext = this.getUIContext()
+  private promptAction: PromptAction = this.uiContext.getPromptAction()
 
   build() {
-    Navigation(this.pathStack) {
-      Column({ space: 10 }) {
+    Column() {
+      Navigation(this.pathStack) {
+        Row() {
+          Blank();
+        }.height('40%')
+
+        // 1. logo名字
         Row() {
           Text('CocktailHelper').fontSize('30.00').fontColor(Color.White)
             .fontFamily('Avara-Black')
-        }
+        }.width('90%').justifyContent(FlexAlign.Center)
 
+        // 2. 搜索栏和搜索按钮
         Row() {
           Stack() {
             TextInput({ placeholder: '请输入搜索内容' })
               .backgroundColor(Color.White)
-              .width('90.00%')
+              .fontColor(Color.Black)
+              .width('80.00%')
               .onChange((value: string) => {
                 this.inputValue = value;
               })
@@ -46,55 +48,83 @@ struct Index {
             Button() {
               Image($r('app.media.search')).width(25).height(25)
             }
-            .width('20%')
+            .width('50.00vp')
             .onClick(() => {
               hilog.info(0xFFFF, "testTag", `用户输入：${this.inputValue}`)
-
-              axios.get('https://www.thecocktaildb.com/api/json/v1/1/search.php', {
+              if (this.inputValue.trim() === '') {
+                this.promptAction.showToast({ message: '请输入搜索内容' })
+                return
+              }
+              axios.get('http://123.249.44.20:9090/cocktails/findByName', {
                 params: {
-                  s: this.inputValue
+                  strDrink: this.inputValue
                 }
               }).then((resp: AxiosResponse) => {
-                if (resp.data.drinks !== null) {
-                  const cocktailData: CocktailData = {
-                    idDrink: resp.data.drinks[0].idDrink,
-                    strDrink: resp.data.drinks[0].strDrink,
-                    strDrinkThumb: resp.data.drinks[0].strDrinkThumb,
-                    strGlass: resp.data.drinks[0].strGlass,
-                    strInstructions: resp.data.drinks[0].strInstructions,
-                    strIngredients: [],
-                    strMeasures: []
+                if (resp.data.code === 1) {
+                  hilog.info(0xFFFF, 'testTag', `查询结果：${JSON.stringify(resp.data)}`)
+                  if (resp.data.data && resp.data.data.length > 0) {
+                    // 取第一个鸡尾酒作为当前 cocktail 对象
+                    const data = resp.data.data[0] as Cocktail
+                    this.cocktail = new Cocktail(data)
+                    this.pathStack.pushPathByName("DetailPage", this.cocktail);
+                  } else {
+                    this.promptAction.showToast({
+                      message: '未找到相关鸡尾酒',
+                      duration: 2000
+                    })
+                    hilog.info(0xFFFF, 'testTag', '未找到相关鸡尾酒')
                   }
-                  let ingredients: string[] = [];
-                  let measures: string[] = [];
-                  for (let i = 1; i <= 15; i++) {
-                    const ingredient: string | null = resp.data.drinks[0][`strIngredient${i}`];
-                    const measure: string | null = resp.data.drinks[0][`strMeasure${i}`];
-                    if (!ingredient || ingredient.trim() === '') {
-                      break;
-                    }
-                    ingredients.push(ingredient.trim());
-                    if (measure && measure.trim() !== '') {
-                      measures.push(measure.trim());
-                    } else {
-                      measures.push('');
-                    }
-                  }
-                  cocktailData.strIngredients = ingredients;
-                  cocktailData.strMeasures = measures;
-                  this.cocktail = new Cocktail(cocktailData);
-                  this.pathStack.pushPathByName("DetailPage", this.cocktail);
                 } else {
-                  hilog.error(0xFFFF, 'testTag', 'Error: 获取请求失败，code != 200');
+                  this.promptAction.showToast({
+                    message: '查找失败',
+                    duration: 2000
+                  })
+                  hilog.error(0xFFFF, 'testTag', 'Error: code != 200');
                 }
               }).catch((err: AxiosError) => {
+                this.promptAction.showToast({
+                  message: '请求异常',
+                  duration: 2000
+                })
                 hilog.error(0xFFFF, 'testTag', `catchError: ${err}`);
               });
-            })
-            .height('40.00vp')
+            }).height('40.00vp')
           }.align(Alignment.End)
         }
-      }.width('80%').height('100%').justifyContent(FlexAlign.Center)
-    }.width('100%').height('100%').backgroundColor('#2C2C2B')
+      }.height('95%')
+
+      // 3. 底部导航栏
+      Row() {
+        // 搜索按钮
+        Text('搜索')
+          .fontColor(this.pageNum === 1 ? Color.White : Color.Grey)
+          .fontWeight(this.pageNum === 1 ? 500 : 400)
+          .textAlign(TextAlign.Center)
+          .padding({ left: 10, right: 10 })  // 扩大点击区域
+          .onClick(() => {
+            this.pageNum = 1
+            hilog.info(0xFFFF, "testTag", `=======搜索 ${this.pageNum} ============`)
+          })
+
+        // 首页按钮
+        Text('首页')
+          .fontColor(this.pageNum === 2 ? Color.White : Color.Grey)
+          .fontWeight(this.pageNum === 2 ? 500 : 400)
+          .textAlign(TextAlign.Center)
+          .padding({ left: 10, right: 10 })
+          .onClick(() => {
+            this.pageNum = 2
+            hilog.info(0xFFFF, "testTag", `=======首页 ${this.pageNum} ============`)
+            this.pathStack.pushPathByName("HomePage", '')
+          })
+      }
+      .justifyContent(FlexAlign.SpaceAround)
+      .backgroundColor('#2C2C2B')
+      .height('5.00%')
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .backgroundColor('#2C2C2B')
   }
 }

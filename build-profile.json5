@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\yeyuchun\\.ohos\\config\\default_CocktailHelper_5ww4LtkSWbe9ULTgWeQYxLz1560hmTMsUsal-7ze_QA=.cer",
+          "certpath": "/Users/yeyuchun/.ohos/config/default_CocktailHelper_jf94fHFkF7Px7vE15lhq167jCFg94MSllOfxTzB7Gpk=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B129167885F3FC263F4D82677BC53C2E4519ABF22E47D74D579E46822862166197DC8FE357D5B37",
-          "profile": "C:\\Users\\yeyuchun\\.ohos\\config\\default_CocktailHelper_5ww4LtkSWbe9ULTgWeQYxLz1560hmTMsUsal-7ze_QA=.p7b",
+          "keyPassword": "0000001B6F34E590CA998DFFB45957B77597E76CD0942B5E5572669A91442D91107BBF9546E52F91429856",
+          "profile": "/Users/yeyuchun/.ohos/config/default_CocktailHelper_jf94fHFkF7Px7vE15lhq167jCFg94MSllOfxTzB7Gpk=.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\yeyuchun\\.ohos\\config\\default_CocktailHelper_5ww4LtkSWbe9ULTgWeQYxLz1560hmTMsUsal-7ze_QA=.p12",
-          "storePassword": "0000001B221FCCB12776E31F8C49AE336147D5F0840589BBECE6AD219C557077EF666346052A46C2F1EF66"
+          "storeFile": "/Users/yeyuchun/.ohos/config/default_CocktailHelper_jf94fHFkF7Px7vE15lhq167jCFg94MSllOfxTzB7Gpk=.p12",
+          "storePassword": "0000001BB937CD44552A79A61F3892900009E8CCC1A32C98892AF5E056C5FC79E668EF20863EA14669AD80"
         }
       }
     ],
