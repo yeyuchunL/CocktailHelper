@@ -34,7 +34,7 @@ export struct CocktailCard {
       }
     }
     .width('90%')
-    .backgroundColor('#80FFFFFF') // 半透明白色
+    .backgroundColor($r('app.color.card_back_color'))
     .borderRadius(12)
     .shadow({
       radius: 8,

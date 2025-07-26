@@ -5,12 +5,36 @@
       "value": "#2C2C2B"
     },
     {
-      "name": "base_color",
-      "value": "#FCFCFC"
+      "name": "logo_title",
+      "value": "#FF000000"
     },
     {
-      "name": "component_background",
+      "name": "back_color",
+      "value": "#F2F3F5"
+    },
+    {
+      "name": "selected_back_color",
+      "value": "#4578EF"
+    },
+    {
+      "name": "selected_color",
       "value": "#FFFFFF"
+    },
+    {
+      "name": "unselected_back_color",
+      "value": "#E7E8EA"
+    },
+    {
+      "name": "unselected_color",
+      "value": "#9E9FA1"
+    },
+    {
+      "name": "card_back_color",
+      "value": "#80FFFFFF"
+    },
+    {
+      "name": "card_font_color",
+      "value": "#000000"
     }
   ]
 }

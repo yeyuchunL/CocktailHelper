@@ -1,14 +1,15 @@
-import axios, { AxiosResponse, AxiosError } from '@ohos/axios'
 import { Cocktail, CocktailData } from '../model/CocktailModel';
 import hilog from '@ohos.hilog';
 import { CocktailCard } from '../components/CocktailCard';
 import Detail from './Detail';
 import { PromptAction } from '@kit.ArkUI';
+import { IndexViewModel } from '../viewmodel/IndexViewModel';
 
 @Entry
 @Component
 struct Index {
   @Provide pageStack: NavPathStack = new NavPathStack()
+  private viewModel: IndexViewModel = new IndexViewModel()
   // 顶部标签切换状态
   @State currentTopTab: number = 0;
   // 底部导航切换状态
@@ -20,38 +21,20 @@ struct Index {
   @State inputValue: string = ''
   private uiContext: UIContext = this.getUIContext()
   private promptAction: PromptAction = this.uiContext.getPromptAction()
-  //函数
+
+  aboutToAppear() {
+    this.fetchAllCocktails()
+  }
+
   private fetchAllCocktails = () => {
-    axios.get('http://123.249.44.20:9090/cocktails/findAll')
-      .then((resp: AxiosResponse) => {
-        if (resp.data.code === 1 && resp.data.data.length > 0) {
-          const data = resp.data.data as CocktailData[];
-          this.cocktailList = data.map(item => new Cocktail(item));
-          hilog.info(0xFFFF, 'testTag', '查询所有鸡尾酒成功');
-        } else {
-          hilog.error(0xFFFF, 'testTag', '查询鸡尾酒失败');
-        }
-      })
-      .catch((err: AxiosError) => {
-        hilog.error(0xFFFF, 'testTag', '发送请求失败');
-      });
+    this.viewModel.fetchAllCocktails().then(data => {
+      this.cocktailList = data;
+    })
   }
   private searchByBaseSpirit = (baseSpirit: string) => {
-    axios.get('http://123.249.44.20:9090/cocktails/findByBaseSpirit', {
-      params: {
-        baseSpirit: baseSpirit
-      }
-    }).then((resp: AxiosResponse) => {
-      if (resp.data.code === 1 && resp.data.data.length > 0) {
-        const data = resp.data.data as CocktailData[];
-        this.cocktailList = data.map(item => new Cocktail(item));
-        hilog.info(0xFFFF, 'testTag', `查询成功`)
-      } else {
-        this.cocktailList = []
-        hilog.info(0xFFFF, 'testTag', `没有找到鸡尾酒`)
-      }
-    }).catch((err: AxiosError) => {
-      hilog.error(0xFFFF, 'testTag', '搜索请求失败')
+    this.currentBaseLiquor = baseSpirit
+    this.viewModel.searchByBaseSpirit(baseSpirit).then(data => {
+      this.cocktailList = data;
     })
   }
 
@@ -69,7 +52,7 @@ struct Index {
     Column() {
       Button(title)
         .fontSize(16)
-        .fontColor(Color.Black)
+        .fontColor(this.currentTopTab === index ? $r('app.color.selected_color') : $r('app.color.unselected_color'))
         .fontWeight(this.currentTopTab === index ? FontWeight.Bold : FontWeight.Normal)
         .backgroundColor(Color.Transparent) // 按钮本身透明
         .onClick(() => {
@@ -106,7 +89,8 @@ struct Index {
       top: 8,
       bottom: 8
     }) // 外边距，按钮之间留空
-    .backgroundColor('#80FFFFFF') // 半透明白
+    .backgroundColor(this.currentTopTab === index ? $r('app.color.selected_back_color') :
+    $r('app.color.unselected_back_color'))
     .borderRadius(12)
     .shadow({
       radius: 6,
@@ -128,29 +112,12 @@ struct Index {
         this.TabButton(4, '龙舌兰')
         this.TabButton(5, '威士忌')
         this.TabButton(6, '白兰地')
-      }.width('100%')
-      .padding({ left: 10, right: 10 }) // 整体左右留白
-    }
-    .scrollable(ScrollDirection.Horizontal)
-    .width('100%')
-  }
-
-  // 底部导航栏-单项
-  @Builder
-  BottomTabItem(index: number, title: string, normalIcon: Resource) {
-    Column() {
-      Image(normalIcon).size({ width: 24, height: 24 })
-      Text(title).fontSize(12)
-    }.onClick(() => {
-      this.currentBottomTab = index
-    })
-  }
-
-  // 底部导航栏
-  @Builder
-  BottomTabBar() {
-    this.BottomTabItem(0, '搜索', $r('app.media.home'))
-    this.BottomTabItem(0, '首页', $r('app.media.home'))
+      }
+      .padding({ left: 10, right: 10 })
+      .align(Alignment.Start)
+      .height('60.00vp')
+    }.scrollable(ScrollDirection.Horizontal)
+    .scrollBar(BarState.Off)
   }
 
   // 内容区域，传入字符串，进行搜索
@@ -182,7 +149,7 @@ struct Index {
               Text('CocktailHelper')
                 .fontSize(30)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(Color.Black)
+                .fontColor($r('app.color.logo_title'))
             }
             .width('100%')
             .justifyContent(FlexAlign.Center)
@@ -193,16 +160,10 @@ struct Index {
               Stack() {
                 TextInput({ placeholder: '请输入搜索内容' })
                   .fontSize(16)
-                  .fontColor('#000000')
-                  .backgroundColor('#F5F5F5')
+                  .backgroundColor($r('app.color.unselected_back_color'))
                   .borderRadius(12)
-                  .padding({
-                    left: 16,
-                    right: 48,
-                    top: 12,
-                    bottom: 12
-                  })
                   .width(300)
+                  .height(50)
                   .onChange((value: string) => {
                     this.inputValue = value
                   })
@@ -211,51 +172,26 @@ struct Index {
                 Button() {
                   Image($r('app.media.search')).width(20).height(20)
                 }
-                .width(36)
-                .height(36)
-                .position({ x: 260, y: 10 }) // 精准定位右侧按钮（宽300 - padding - 按钮宽）
+                .width(50)
+                .height(50)
+                .position({ x: 250, y: 0 })
                 .backgroundColor(Color.Transparent)
-                .onClick(() => {
+                .onClick(async () => {
                   hilog.info(0xFFFF, "testTag", `用户输入：${this.inputValue}`)
                   if (this.inputValue.trim() === '') {
                     this.promptAction.showToast({ message: '请输入搜索内容' })
                     return
                   }
-                  axios.get('http://123.249.44.20:9090/cocktails/findByName', {
-                    params: {
-                      strDrink: this.inputValue
-                    }
-                  }).then((resp: AxiosResponse) => {
-                    if (resp.data.code === 1) {
-                      hilog.info(0xFFFF, 'testTag', `查询结果：${JSON.stringify(resp.data)}`)
-                      if (resp.data.data && resp.data.data.length > 0) {
-                        // 取第一个鸡尾酒作为当前 cocktail 对象
-                        const data = resp.data.data[0] as Cocktail
-                        this.cocktail = new Cocktail(data)
-                        this.pageStack.pushPathByName('Detail', new Object({ 'content': this.cocktail }))
-                      } else {
-                        this.promptAction.showToast({
-                          message: '未找到相关鸡尾酒',
-                          duration: 2000
-                        })
-                        hilog.info(0xFFFF, 'testTag', '未找到相关鸡尾酒')
-                      }
-                    } else {
-                      this.promptAction.showToast({
-                        message: '查找失败',
-                        duration: 2000
-                      })
-                      hilog.error(0xFFFF, 'testTag', 'Error: code != 200');
-                    }
-                  }).catch((err: AxiosError) => {
-                    this.promptAction.showToast({
-                      message: '请求异常',
-                      duration: 2000
-                    })
-                    hilog.error(0xFFFF, 'testTag', `catchError: ${err}`);
-                  });
+
+                  const result = await this.viewModel.searchByName(this.inputValue)
+                  if (result) {
+                    this.pageStack.pushPathByName('Detail', new Object({ 'content': result }))
+                  } else {
+                    this.promptAction.showToast({ message: '未找到相关鸡尾酒' })
+                  }
 
                 })
+
               }
             }
 
@@ -264,18 +200,42 @@ struct Index {
           .height('100%')
         }.tabBar('搜索页')
 
-        // 2.首页
         TabContent() {
           Column() {
             this.TopTabBar()
 
-            // 显示内容
-            this.showCocktailList()
+            // 内容滚动区域（减去顶部 tab 高度）
+            Scroll() {
+              Column() {
+                ForEach(this.cocktailList, (item: Cocktail) => {
+                  Row() {
+                    CocktailCard({ cocktail: item })
+                      .onClick(() => {
+                        hilog.info(0xFFFF, 'testTag', `点击${item.strCnName}`)
+                        this.pageStack.pushPathByName('Detail', new Object({ 'content': item }))
+                      })
+                  }
+                  .width('90%')
+                  .borderRadius(10)
+                  .margin({ top: 10 })
+                }, (item: Cocktail) => item.id.toString())
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Center)
+            }
+            .height('calc(100% - 150px)')
+            .scrollBar(BarState.Off)
 
-          }.width('100%').height('100%')
-        }.tabBar('首页')
+          }
+          .width('100%')
+          .height('100%')
+        }
+        .tabBar('首页')
 
-      }.width('100%').height('100%')
+      }
+      .width('100%')
+      .height('100%')
+      .scrollable(false)
       .onChange((index: number) => {
         this.currentBottomTab = index
         this.currentTopTab = 0
@@ -286,6 +246,6 @@ struct Index {
       })
     }.navDestination(this.PagesMap)
     .hideTitleBar(true)
-
+    .backgroundColor($r('app.color.back_color'))
   }
 }

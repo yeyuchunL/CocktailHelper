@@ -3,6 +3,38 @@
     {
       "name": "start_window_background",
       "value": "#000000"
+    },
+    {
+      "name": "logo_title",
+      "value": "#FFFFFFFF"
+    },
+    {
+      "name": "back_color",
+      "value": "#000000"
+    },
+    {
+      "name": "selected_back_color",
+      "value": "#2657ED"
+    },
+    {
+      "name": "selected_color",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "unselected_back_color",
+      "value": "#181818"
+    },
+    {
+      "name": "unselected_color",
+      "value": "#575757"
+    },
+    {
+      "name": "card_back_color",
+      "value": "#80202326"
+    },
+    {
+      "name": "card_font_color",
+      "value": "#FFFFFF"
     }
   ]
 }
