@@ -1,7 +1,12 @@
 import { Cocktail, CocktailData, Ingredient } from "../model/CocktailModel"
 import { font } from '@kit.ArkUI';
 
-@Entry
+// 页面跳转入口函数
+@Builder
+export function DetailPageBuilder() {
+  DetailPage()
+}
+
 @Component
 struct DetailPage {
   // 导入字体
@@ -13,7 +18,7 @@ struct DetailPage {
   }
 
   pathStack: NavPathStack = new NavPathStack()
-  @State cocktail: Cocktail = new Cocktail()
+  private cocktail: Cocktail = new Cocktail()
 
   // 定义 Builder
   @Builder
@@ -72,6 +77,7 @@ struct DetailPage {
           .backgroundColor(Color.Black)
           .borderRadius(10)
 
+
           // 3. 配方用量
           Row() {
             Column({ space: 10 }) {
@@ -92,8 +98,7 @@ struct DetailPage {
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
 
                   // 右侧：用量，若为空显示为 "-"
-                  Text((item.ingredientMeasure && item.ingredientMeasure.trim() !== '') ? item.ingredientMeasure :
-                    '-')
+                  Text((item.ingredientMeasure && item.ingredientMeasure.trim() !== '') ? item.ingredientMeasure : '-')
                     .width(80)
                     .fontSize(15)
                     .fontColor(Color.White)
